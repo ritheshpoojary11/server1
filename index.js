@@ -1,7 +1,6 @@
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const multer = require('multer');
-const admin = require('firebase-admin');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const app = express();
@@ -9,14 +8,10 @@ app.use(cors());
 app.use(express.json());
 
 // Initialize Firebase Admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert('./serviceAccountKey.json'),
-  storageBucket: 'gs://herbal-cartel.appspot.com'
-});
+
 
 // Initialize Firebase Storage
-const storage = admin.storage();
-const bucket = storage.bucket();
+
 
 // Initialize MongoDB connection
 const uri = 'mongodb+srv://ritheshp11:admin@herbcartel.bilcy0r.mongodb.net/herbel_cartel';
@@ -55,64 +50,7 @@ const upload = multer({
 });
 
 // Handle file upload endpoint
-app.post('/upload', upload.single('image'), async (req, res) => {
-  console.log("received data" + JSON.stringify(req.body));
-  try {
-    // Upload image to Firebase Storage
-    const file = req.file;
-    const fileName = Date.now() + '-' + file.originalname;
-    const fileUpload = bucket.file(fileName);
-    const fileStream = fileUpload.createWriteStream();
-    fileStream.on('error', (err) => {
-      console.error('Error uploading to Firebase:', err);
-      res.status(500).send('Error uploading file to Firebase');
-    });
 
-    fileStream.on('finish', async () => {
-      try {
-        const [url] = await fileUpload.getSignedUrl({
-          action: 'read',
-          expires: '03-09-2025', // Set an expiration date if needed
-        });
-
-        console.log('File uploaded successfully.');
-        console.log('Download URL:', url);
-
-        // Save plant data to MongoDB
-        const newPlant = new Plant({
-          name: req.body.name,
-          email: req.body.email,
-          place: req.body.place,
-          plantName: req.body.plantName,
-          scientificName: req.body.scientificName,
-          category: req.body.category,
-          information: req.body.information,
-          imageUrl: url,
-          kannada: "nill",
-          hindi: "nill",
-          telugu: "nill",
-          tamil: "nill",
-          uses: "nill",
-          demerits: "nill",
-        });
-
-        await newPlant.save();
-
-        // Send response to the client
-        res.status(201).json({ downloadUrl: url });
-      } catch (error) {
-        console.error('Error getting download URL:', error);
-        res.status(500).send('Error getting download URL');
-      }
-    });
-
-    // Write the file data to Firebase Storage
-    fileStream.end(file.buffer);
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    res.status(500).send('Error uploading file');
-  }
-});
 
 async function fetchData(collectionName, searchTerm = "", category = "") {
   const uri = 'mongodb+srv://ritheshp11:admin@herbcartel.bilcy0r.mongodb.net/?retryWrites=true&w=majority'; // Replace with your MongoDB URI
