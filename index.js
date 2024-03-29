@@ -2,7 +2,7 @@ const express = require('express');
 const { MongoClient } = require('mongodb');
 const multer = require('multer');
 const cors = require('cors');
-const nodemailer = require('nodemailer');
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -171,35 +171,7 @@ app.post('/deleteData', async (req, res) => {
       console.log('Plant deleted successfully:', name);
 
       // Send email notification
-      const mailOptions = {
-        from: 'herbalcartel2024@gmail.com',
-        to: email, // Correct interpolation of email variable
-        subject: 'Update on Your Plant Information Submission!',
-        html: `
-        <pre>Dear ${name},
-
-We appreciate your effort in submitting plant information to our website. However, after careful review, we regret to inform you that your submission did not meet our current standards for publication.
-
-Reasons for rejection may include:
-
-Incomplete or inaccurate information provided.
-Lack of clarity or organization in the submission.
-
-We understand that receiving this news may be disappointing. However, we see this as an opportunity for collaboration and growth. We encourage you to carefully review and consider how you can enhance your submission to align more closely with our standards. Your dedication to improving your contribution is greatly appreciated and valued."
-
-Best regards,
-Team
-Herbal Cartel</pre>`
-      };
-
-      // Send email using configured transporter
-      transporter.sendMail(mailOptions, function(error, info){
-        if (error) {
-          console.error('Error sending email:', error);
-        } else {
-          console.log('Email sent: ' + info.response);
-        }
-      });
+      
 
       return res.status(200).json({ message: 'Plant deleted successfully' });
     } else {
@@ -258,32 +230,7 @@ app.post('/insertData', async (req, res) => {
     // Insert data into Collection4 (Plants_properties)
     await db.collection('plants_properties').insertOne({ plant_id: newPlantId, uses: req.body.uses, additional_info: req.body.information, demerits: req.body.demerits });
     await db.collection('AdditionalPlants').deleteOne({ name: req.body.name });
-    const mailOptions = {
-      from: 'herbalcartel2024@gmail.com',
-      to: email, // Correct interpolation of email variable
-      subject: 'Your Plant Information Has Been Approved!',
-      html: `
-      <pre>Dear ${name},
-
-      We're excited to share that your submitted plant information has been successfully approved by our team and is now live on our website. Thank you for contributing to our community of plant enthusiasts!
-      
-      Your dedication to sharing your plant knowledge with our community is truly commendable, and we're grateful for your contribution. Your submission has met our standards and will now be accessible to our audience, helping fellow plant enthusiasts learn and grow.
-      
-      Happy gardening!
-      
-      Best regards,
-      Team
-      Herbal Cartel</pre>`
-    };
-
-    // Send email using configured transporter
-    transporter.sendMail(mailOptions, function(error, info){
-      if (error) {
-        console.error('Error sending email:', error);
-      } else {
-        console.log('Email sent: ' + info.response);
-      }
-    });
+   
 
     res.status(200).json({ message: 'Data inserted successfully into all collections' });
   } catch (error) {
